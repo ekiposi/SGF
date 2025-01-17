@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<div class="container mx-auto px-4 py-8">
+    <!-- Header with title and export button -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Planning Général des Employés</h1>
+        <div>
+            <button onclick="handleSchedule()" class="bg-indigo-800 text-white px-4 py-2 rounded-lg hover:bg-indigo-900 transition-all duration-150">
+                <i class="fas fa-user me-2"></i>Assign Schedules</button>
+            <button onclick="exportToPDF()"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-150">
+                <i class="fas fa-file-pdf me-2"></i>Exporter PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main table -->
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="min-w-full" id="scheduleTable">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Nom</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Jours de Travail</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Horaires</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Valide Jusqu'au</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Période de Congés</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for schedule in schedules %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ schedule.name }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900 flex gap-1">
+                        {% for day in schedule.days %}
+                        <p class="bg-green-600 text-white py-1 px-2 rounded-full">{{ day }}</p>
+                        {% endfor %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ schedule.repeat_until.strftime('%d/%m/%Y') if schedule.repeat_until else 'Indéfini' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {% if schedule.vacation_start and schedule.vacation_end %}
+                        {{ schedule.vacation_start.strftime('%d/%m/%Y') }} - {{
+                        schedule.vacation_end.strftime('%d/%m/%Y') }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function exportToPDF() {
+    const header = document.createElement('div');
+    header.innerHTML = `
+        <div style="text-align: center; padding: 20px; font-family: Arial, sans-serif;">
+            <h1 style="font-size: 20px; margin-bottom: 10px;">PluriMedic | Gestion d'entrepôt</h1>
+            <p style="font-size: 12px; margin: 5px 0;">Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti</p>
+            <p style="font-size: 12px; margin: 5px 0;">Email: info@hopitalplurimedic.com</p>
+            <p style="font-size: 12px; margin: 5px 0;">Téléphone: +509 46 16 3878</p>
+            <hr style="border: 1px solid #000; margin: 15px 0;">
+            <h2 style="font-size: 16px; margin: 15px 0;">Planning Général des Employés</h2>
+            <p style="font-size: 12px;">Généré le {{ current_date }}</p>
+        </div>
+    `;
+
+    const element = document.getElementById('scheduleTable');
+    const opt = {
+        margin: [0.75, 0.75, 0.75, 0.75],
+        filename: 'planning-general.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true
+        },
+        jsPDF: { 
+            unit: 'in', 
+            format: 'a4', 
+            orientation: 'landscape',
+            putOnlyUsedFonts: true
+        }
+    };
+
+    const content = document.createElement('div');
+    content.appendChild(header.cloneNode(true));
+    
+    const spacer = document.createElement('div');
+    spacer.style.height = '20px';
+    content.appendChild(spacer);
+    
+    const tableClone = element.cloneNode(true);
+    tableClone.style.width = '100%';
+    content.appendChild(tableClone);
+
+    html2pdf()
+        .set(opt)
+        .from(content)
+        .save()
+        .catch(err => console.error('Error generating PDF:', err));
+}
+    function handleSchedule() {
+        window.location.href = "{{ url_for('edit_schedules') }}";
+    }
+</script>
+{% endblock %}

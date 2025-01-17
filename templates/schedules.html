@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Employee Schedules</h1>
+    
+    <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="employee-search">
+            Search Employee
+        </label>
+        <input type="text" id="employee-search" 
+               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+               placeholder="Enter employee name or ID">
+        <div id="search-results" class="hidden absolute z-10 w-full bg-white border rounded mt-1"></div>
+    </div>
+
+    <div id="schedule-form" class="hidden">
+        <h2 class="text-xl font-bold mb-4">Schedule for <span id="selected-employee"></span></h2>
+        
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3">Weekly Schedule</h3>
+            <div id="weekly-schedule">
+                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                <div class="flex items-center mb-4">
+                    <div class="w-32">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" class="form-checkbox day-checkbox" data-day="{{ loop.index0 }}">
+                            <span class="ml-2">{{ day }}</span>
+                        </label>
+                    </div>
+                    <div class="flex space-x-4">
+                        <input type="time" class="start-time border rounded px-2 py-1" disabled>
+                        <span>to</span>
+                        <input type="time" class="end-time border rounded px-2 py-1" disabled>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">
+                <input type="checkbox" id="repeat-schedule" class="mr-2">
+                Repeat schedule until
+            </label>
+            <input type="date" id="repeat-until" class="border rounded px-2 py-1" disabled>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3">Vacation Period</h3>
+            <div class="flex space-x-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Start Date</label>
+                    <input type="date" id="vacation-start" class="border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">End Date</label>
+                    <input type="date" id="vacation-end" class="border rounded px-2 py-1">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex space-x-4">
+            <button id="save-schedule" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Save Schedule
+            </button>
+            <button id="save-vacation" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Save Vacation
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedEmployeeId = null;
+
+const searchInput = document.getElementById('employee-search');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', debounce(async () => {
+    const term = searchInput.value.trim();
+    if (term.length < 2) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+
+    try {
+        const response = await fetch('/edit_schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'search_employee',
+                term: term
+            })
+        });
+
+        const employees = await response.json();
+        searchResults.innerHTML = employees.map(emp => `
+            <div class="p-2 hover:bg-gray-100 cursor-pointer employee-result"
+                 data-id="${emp.id}" data-name="${emp.name}">
+                ${emp.name} (${emp.pluri_id})
+            </div>
+        `).join('');
+        searchResults.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error searching employees:', error);
+    }
+}, 300));
+
+searchResults.addEventListener('click', (e) => {
+    const result = e.target.closest('.employee-result');
+    if (result) {
+        selectedEmployeeId = result.dataset.id;
+        document.getElementById('selected-employee').textContent = result.dataset.name;
+        document.getElementById('schedule-form').classList.remove('hidden');
+        searchResults.classList.add('hidden');
+        searchInput.value = result.dataset.name;
+        loadEmployeeSchedule(selectedEmployeeId);
+    }
+});
+
+const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+const handleCheckboxClick = (e) => {
+    const container = e.target.closest('div').parentElement;
+    const timeInputs = container.querySelectorAll('input[type="time"]');
+    timeInputs.forEach(input => input.disabled = !e.target.checked);
+};
+dayCheckboxes.forEach(checkbox => checkbox.addEventListener('click', handleCheckboxClick));
+
+document.getElementById('repeat-schedule').addEventListener('change', (e) => {
+    document.getElementById('repeat-until').disabled = !e.target.checked;
+});
+
+document.getElementById('save-schedule').addEventListener('click', async () => {
+    if (!selectedEmployeeId) return;
+
+    const schedules = [];
+    document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+        if (checkbox.checked) {
+            const container = checkbox.closest('div').parentElement;
+            schedules.push({
+                day: parseInt(checkbox.dataset.day),
+                start: container.querySelector('.start-time').value,
+                end: container.querySelector('.end-time').value
+            });
+        }
+    });
+
+    const repeatUntil = document.getElementById('repeat-schedule').checked
+        ? document.getElementById('repeat-until').value
+        : null;
+
+    try {
+        const response = await fetch('/edit_schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'save_schedule',
+                employee_id: selectedEmployeeId,
+                schedules: schedules,
+                repeat_until: repeatUntil
+            })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            alert('Schedule saved successfully');
+        } else {
+            alert('Error saving schedule: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error saving schedule:', error);
+        alert('Error saving schedule');
+    }
+});
+
+document.getElementById('save-vacation').addEventListener('click', async () => {
+    if (!selectedEmployeeId) return;
+
+    const startDate = document.getElementById('vacation-start').value;
+    const endDate = document.getElementById('vacation-end').value;
+
+    try {
+        const response = await fetch('/edit_schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'save_vacation',
+                employee_id: selectedEmployeeId,
+                start_date: startDate,
+                end_date: endDate
+            })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            alert('Vacation period saved successfully');
+        } else {
+            alert('Error saving vacation period: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error saving vacation:', error);
+        alert('Error saving vacation period');
+    }
+});
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+async function loadEmployeeSchedule(employeeId) {
+    try {
+        const response = await fetch(`/schedules/employee/${employeeId}`);
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+            throw new Error(data.message);
+        }
+        
+        document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+            const timeInputs = checkbox.closest('div').parentElement.querySelectorAll('input[type="time"]');
+            timeInputs.forEach(input => {
+                input.disabled = true;
+                input.value = '';
+            });
+        });
+
+        data.schedules.forEach(schedule => {
+            const checkbox = document.querySelector(`[data-day="${schedule.day_of_week}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                const container = checkbox.closest('div').parentElement;
+                const startTime = container.querySelector('.start-time');
+                const endTime = container.querySelector('.end-time');
+                startTime.disabled = false;
+                endTime.disabled = false;
+                startTime.value = schedule.start_time;
+                endTime.value = schedule.end_time;
+            }
+        });
+
+        const repeatCheckbox = document.getElementById('repeat-schedule');
+        const repeatUntil = document.getElementById('repeat-until');
+        if (data.repeat_until) {
+            repeatCheckbox.checked = true;
+            repeatUntil.disabled = false;
+            repeatUntil.value = data.repeat_until;
+        } else {
+            repeatCheckbox.checked = false;
+            repeatUntil.disabled = true;
+            repeatUntil.value = '';
+        }
+        if (data.vacations && data.vacations.length > 0) {
+            const latestVacation = data.vacations[data.vacations.length - 1];
+            document.getElementById('vacation-start').value = latestVacation.start_date;
+            document.getElementById('vacation-end').value = latestVacation.end_date;
+        }
+    } catch (error) {
+        console.error('Error loading employee schedule:', error);
+        alert('Error loading employee schedule. Please try again.');
+    }
+}
+
+function validateSchedule(schedules) {
+    if (schedules.length === 0) {
+        alert('Please select at least one day for the schedule.');
+        return false;
+    }
+
+    for (const schedule of schedules) {
+        if (!schedule.start || !schedule.end) {
+            alert('Please enter both start and end times for selected days.');
+            return false;
+        }
+
+        const start = new Date(`2000-01-01T${schedule.start}`);
+        const end = new Date(`2000-01-01T${schedule.end}`);
+
+        if (start >= end) {
+            alert('End time must be after start time.');
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function validateVacation(startDate, endDate) {
+    if (!startDate || !endDate) {
+        alert('Please enter both start and end dates for vacation period.');
+        return false;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start >= end) {
+        alert('Vacation end date must be after start date.');
+        return false;
+    }
+
+    if (start < new Date()) {
+        alert('Vacation start date cannot be in the past.');
+        return false;
+    }
+
+    return true;
+}
+</script>
+{% endblock %}

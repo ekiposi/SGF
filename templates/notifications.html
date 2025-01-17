@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 p-4 bg-white shadow-lg rounded-lg">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Notification</h2>
+
+    {% if employees_without_schedules %}
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6" role="alert">
+            <p class="font-semibold">Employees with no scheduled jobs for 2 days:</p>
+            <ul class="mt-2 space-y-2">
+                {% for employee in employees_without_schedules %}
+                    <li class="flex items-center">
+                        <div class="bg-yellow-500 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">
+                            {{ loop.index }}
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-lg font-medium text-gray-700">{{ employee.first_name }} {{ employee.last_name }} <span class="bg-gray-300 px-2 py-1 rounded-full">{{ employee.pluri_id }}</span></p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
+            <p class="font-semibold">All employees have scheduled jobs.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
