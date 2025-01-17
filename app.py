@@ -1257,7 +1257,7 @@ def schedules():
 def notifications():
     return render_template('notifications.html', employees_without_schedules=find_employees_without_schedules())
 def run_backup_scheduler():
-while True:
+    while True:
 time.sleep(1)
 
 if __name__ == '__main__':
