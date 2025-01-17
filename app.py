@@ -1257,13 +1257,13 @@ def schedules():
 def notifications():
     return render_template('notifications.html', employees_without_schedules=find_employees_without_schedules())
 
-# def run_backup_scheduler():
-#     while True:
-#         schedule.run_pending()
-#         time.sleep(1)
+ def run_backup_scheduler():
+     while True:
+         schedule.run_pending()
+         time.sleep(1)
 
 if __name__ == '__main__':
-    # import threading
-    # threading.Thread(target=run_backup_scheduler).start()
+     import threading
+     threading.Thread(target=run_backup_scheduler).start()
     app.run(host='0.0.0.0', debug=True)
     # app.run(debug=True)
