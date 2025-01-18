@@ -6,6 +6,17 @@ import os
 import qrcode
 import random
 import string
+import pytz
+
+def get_eastern_time():
+    eastern_tz = pytz.timezone('America/New_York')
+    return datetime.now(eastern_tz)
+
+def make_aware(dt, timezone='America/New_York'):
+    if dt.tzinfo is None:
+        tz = pytz.timezone(timezone)
+        return tz.localize(dt)
+    return dt
 
 db = SQLAlchemy()
 
@@ -37,7 +48,9 @@ class Employee(db.Model):
     dob = db.Column(db.Date, nullable=False)
     qr_data = db.Column(db.String(200), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    attendances = db.relationship('Attendance', backref='employee', lazy=True)
+    attendances = db.relationship('Attendance', backref='employee', lazy=True, cascade="all, delete-orphan")
+    schedules = db.relationship('Schedule', backref='employee', lazy=True, cascade="all, delete-orphan")
+    vacation = db.relationship('Vacation', backref='employee', lazy=True, cascade="all, delete-orphan")
 
     @property
     def full_name(self):
@@ -72,11 +85,13 @@ class Employee(db.Model):
     
     def get_attendance_status(self, check_in_time, scheduled_time):
         """Calculate attendance status based on check-in time"""
-        buffer_time = timedelta(minutes=30)
-        scheduled_datetime = datetime.combine(check_in_time.date(), scheduled_time)
-        earliest_allowed = scheduled_datetime - buffer_time
+        # buffer_time = timedelta(minutes=30)
+        eastern_time = get_eastern_time()
+        scheduled_datetime = datetime.combine(eastern_time.date(), scheduled_time)
+        # earliest_allowed = scheduled_datetime - buffer_time
         
-        if earliest_allowed <= check_in_time <= scheduled_datetime:
+        # if earliest_allowed <= check_in_time <= scheduled_datetime:
+        if check_in_time <= scheduled_datetime:
             return 'present'
         elif check_in_time > scheduled_datetime:
             return 'late'
@@ -85,7 +100,7 @@ class Employee(db.Model):
 class Attendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    check_in = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    check_in = db.Column(db.DateTime, nullable=False, default=get_eastern_time)
     check_out = db.Column(db.DateTime)
     total_hours = db.Column(db.Float)
     status = db.Column(db.String(20))  # New field for attendance status
@@ -93,11 +108,13 @@ class Attendance(db.Model):
     def calculate_status(self, scheduled_time):
         """Calculate and set attendance status"""
         if self.check_in:
-            buffer_time = timedelta(minutes=30)
-            scheduled_datetime = datetime.combine(self.check_in.date(), scheduled_time)
-            earliest_allowed = scheduled_datetime - buffer_time
+            # buffer_time = timedelta(minutes=30)
+            eastern_time = get_eastern_time()
+            scheduled_datetime = make_aware(datetime.combine(eastern_time.date(), scheduled_time))
+            # earliest_allowed = scheduled_datetime - buffer_time
             
-            if earliest_allowed <= self.check_in <= scheduled_datetime:
+            # if earliest_allowed <= self.check_in <= scheduled_datetime:
+            if self.check_in <= scheduled_datetime:
                 self.status = 'present'
             elif self.check_in > scheduled_datetime:
                 self.status = 'late'
@@ -110,11 +127,11 @@ class Schedule(db.Model):
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
     repeat_until = db.Column(db.Date, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_eastern_time)
 
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_eastern_time)
