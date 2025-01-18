@@ -1266,7 +1266,7 @@ def run_backup_scheduler():
         time.sleep(1)
 
 if __name__ == '__main__':
-    # import threading
-    # threading.Thread(target=run_backup_scheduler).start()
-    # app.run(host='0.0.0.0', port=8000, debug=True)
-    app.run(debug=True)
+    import threading
+    threading.Thread(target=run_backup_scheduler).start()
+    app.run(host='0.0.0.0', debug=True)
+    # app.run(debug=True)
