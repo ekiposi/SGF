@@ -25,8 +25,7 @@ DEFAULT_SETTINGS = {
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_YA14kHqPLGBGgSL3r91@mysql-2a126491-exodus.g.aivencloud.com:18235/defaultdb?ssl_verify_cert=false'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Dinu30903%40@localhost/scyan'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_YA14kHqPLGBGgSL3r91@mysql-2a126491-exodus.g.aivencloud.com:18235/defaultdb?ssl_verify_cert=false'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder)
 BACKUP_DIR = os.path.join(app.root_path, 'instance', 'backups')
