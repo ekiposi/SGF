@@ -11,15 +11,12 @@ import base64
 from io import BytesIO
 from PIL import Image
 import face_recognition
-import schedule
+import schedule as sdl
 import time
 import subprocess
 import mysql.connector
 from mysql.connector import Error
-
-BACKUP_DIR = 'instance/backups'
-if not os.path.exists(BACKUP_DIR):
-    os.makedirs(BACKUP_DIR)
+import pytz
 
 DEFAULT_SETTINGS = {
     'backup_frequency': 'daily',
@@ -28,10 +25,14 @@ DEFAULT_SETTINGS = {
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_YA14kHqPLGBGgSL3r91@mysql-2a126491-exodus.g.aivencloud.com:18235/defaultdb?ssl_verify_cert=false'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_YA14kHqPLGBGgSL3r91@mysql-2a126491-exodus.g.aivencloud.com:18235/defaultdb?ssl_verify_cert=false'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Dinu30903%40@localhost/scyan'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder)
 BACKUP_DIR = os.path.join(app.root_path, 'instance', 'backups')
+
+if not os.path.exists(BACKUP_DIR):
+    os.makedirs(BACKUP_DIR)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -41,16 +42,20 @@ login_manager.login_view = 'login'
 # Initialize SQLAlchemy with app
 db.init_app(app)
 
-with app.app_context():
-    db.create_all()
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 def get_eastern_time():
     # Always return UTC-5 regardless of server location
-    return datetime.utcnow()
+    eastern_tz = pytz.timezone('America/New_York')
+    return datetime.now(eastern_tz)
+
+def make_aware(dt, timezone='America/New_York'):
+    if dt.tzinfo is None:
+        tz = pytz.timezone(timezone)
+        return tz.localize(dt)
+    return dt
 
 # Routes
 @app.route('/')
@@ -341,8 +346,8 @@ def delete_employee(employee_id):
 
 def handle_attendance(employee):
     now = get_eastern_time()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    today_start = make_aware(now.replace(hour=0, minute=0, second=0, microsecond=0))
+    today_end = make_aware(now.replace(hour=23, minute=59, second=59, microsecond=999999))
     
     # Check for existing attendance today
     attendance = Attendance.query.filter(
@@ -406,7 +411,6 @@ def scan():
             data = request.json
             qr_data = data.get('qr_data')
             
-            # Find employee by QR data
             employee = Employee.query.filter_by(qr_data=qr_data).first()
             if not employee:
                 return jsonify({'status': 'error', 'message': 'Code QR invalide'}), 400
@@ -1007,11 +1011,11 @@ def create_backup_file():
 
 def schedule_backup(frequency):
     if frequency == 'daily':
-        schedule.every().day.at("00:00").do(create_backup_file)
+        sdl.every().day.at("00:00").do(create_backup_file)
     elif frequency == 'weekly':
-        schedule.every().sunday.at("00:00").do(create_backup_file)
+        sdl.every().sunday.at("00:00").do(create_backup_file)
     elif frequency == 'monthly':
-        schedule.every(1).months.at("00:00").do(create_backup_file)
+        sdl.every(1).months.at("00:00").do(create_backup_file)
 
 def cleanup_old_backups():
     try:
@@ -1130,7 +1134,7 @@ def edit_schedules():
     return render_template('schedules.html')
 
 def check_inactive_employees():
-    today = datetime.utcnow().date()
+    today = get_eastern_time().date()
     two_days_ago = today - timedelta(days=2)
     
     inactive_employees = Employee.query.filter(
@@ -1148,7 +1152,7 @@ def check_inactive_employees():
 @login_required
 def get_employee_schedule(employee_id):
     try:
-        current_date = datetime.utcnow().date()
+        current_date = get_eastern_time().date()
         schedules = Schedule.query.filter(
             Schedule.employee_id == employee_id,
             or_(
@@ -1201,10 +1205,9 @@ def get_employee_schedule(employee_id):
 
 def find_employees_without_schedules():
     
-    today = datetime.now().date()
+    today = get_eastern_time().date()
     today_day_of_week = today.weekday()
     next_day_of_week = (today_day_of_week + 1) % 7
-
     scheduled_employee_ids = Schedule.query.with_entities(Schedule.employee_id).filter(
         (Schedule.day_of_week == next_day_of_week) | (Schedule.day_of_week == next_day_of_week + 1)
     ).distinct()
@@ -1250,7 +1253,7 @@ def schedules():
     return render_template(
         'general_schedule.html', 
         schedules=formatted_schedules,
-        current_date=datetime.now().strftime('%d/%m/%Y')
+        current_date=get_eastern_time().strftime('%d/%m/%Y')
     )
 
 @app.route('/notifications')
@@ -1259,10 +1262,11 @@ def notifications():
 
 def run_backup_scheduler():
     while True:
-        schedule.run_pending()
+        sdl.run_pending()
         time.sleep(1)
 
 if __name__ == '__main__':
-    import threading
-    threading.Thread(target=run_backup_scheduler).start()
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    # import threading
+    # threading.Thread(target=run_backup_scheduler).start()
+    # app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run(debug=True)
