@@ -6,19 +6,24 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <!-- QR Code Scanner Title -->
-                    <h2 id="qrTitle" class="card-title text-center mb-4" style="display: none;">Scan du code Qr</h2>
+                    <!-- Pluri ID Input Title -->
+                    <h2 id="inputTitle" class="card-title text-center mb-4">Entrez votre Pluri ID</h2>
 
                     <!-- Facial Recognition Title -->
                     <h2 id="facialTitle" class="card-title text-center mb-4" style="display: none;">Reconnaissance faciale</h2>
 
                     <!-- Camera Swap Button -->
-                    <button id="cameraSwapBtn" class="btn btn-primary mb-3" style="position: absolute; right: 20px; z-index: 1000;">
+                    <button id="cameraSwapBtn" class="btn btn-primary mb-3" style="position: absolute; right: 20px; z-index: 1000; display: none;">
                         <i class="fas fa-camera-rotate"></i> Changer de caméra
                     </button>
 
-                    <!-- Scanner container -->
-                    <div id="reader" style="width: 100%; min-height: 400px;"></div>
+                    <!-- Input Form -->
+                    <div id="inputForm" class="text-center">
+                        <div class="form-group">
+                            <input type="text" id="pluriId" class="form-control mb-3" placeholder="Entrez votre Pluri ID">
+                            <button id="submitBtn" class="btn btn-primary">Soumettre</button>
+                        </div>
+                    </div>
 
                     <!-- Facial Recognition Camera container -->
                     <div id="facialRecognition" style="display: none;">
@@ -33,22 +38,21 @@
     </div>
 </div>
 
-<!-- Include HTML5-QRCode library -->
-<script src="https://unpkg.com/html5-qrcode"></script>
 <script src="{{ url_for('static', filename='js/face-api.js') }}"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const html5QrcodeScanner = new Html5Qrcode("reader");
         const scanResult = document.getElementById('scanResult');
         const facialRecognition = document.getElementById('facialRecognition');
         const faceVideo = document.getElementById('faceVideo');
-        const readerDiv = document.getElementById('reader');
-        const qrTitle = document.getElementById('qrTitle');
+        const inputForm = document.getElementById('inputForm');
+        const inputTitle = document.getElementById('inputTitle');
         const facialTitle = document.getElementById('facialTitle');
         const cameraSwapBtn = document.getElementById('cameraSwapBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const pluriIdInput = document.getElementById('pluriId');
 
-        let currentPhase = 'qr'; // 'qr' or 'facial'
+        let currentPhase = 'input'; // 'input' or 'facial'
         let isProcessing = false;
         let currentFacingMode = 'environment'; // 'environment' or 'user'
         let currentStream = null;
@@ -57,10 +61,7 @@
         cameraSwapBtn.addEventListener('click', async () => {
             currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
             
-            if (currentPhase === 'qr') {
-                await html5QrcodeScanner.stop();
-                startScanner();
-            } else if (currentPhase === 'facial') {
+            if (currentPhase === 'facial') {
                 if (currentStream) {
                     currentStream.getTracks().forEach(track => track.stop());
                 }
@@ -68,7 +69,7 @@
             }
         });
 
-        let lastEmpId = null; // Store empId for camera swapping during facial recognition
+        let lastEmpId = null;
 
         // Load face-api.js models
         const MODEL_URL = '/static/models';
@@ -78,28 +79,51 @@
                 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             } catch (error) {
-                console.error('Error loading face models:', error);
-                showError('Failed to load facial recognition. Returning to QR scanning...');
-                switchToQRScanning();
+                console.error('Erreur lors du chargement des modèles de reconnaissance faciale:', error);
+                showError('Erreur lors du chargement des modèles de reconnaissance faciale. Veuillez recommencer.');
+                switchToInput();
             }
         }
 
-        function switchToQRScanning() {
-            currentPhase = 'qr';
-            qrTitle.style.display = 'block';
+        function switchToInput() {
+            currentPhase = 'input';
+            inputTitle.style.display = 'block';
             facialTitle.style.display = 'none';
-            readerDiv.style.display = 'block';
+            inputForm.style.display = 'block';
             facialRecognition.style.display = 'none';
-            startScanner();
+            cameraSwapBtn.style.display = 'none';
         }
 
         function switchToFacialRecognition() {
             currentPhase = 'facial';
-            qrTitle.style.display = 'none';
+            inputTitle.style.display = 'none';
             facialTitle.style.display = 'block';
-            readerDiv.style.display = 'none';
+            inputForm.style.display = 'none';
             facialRecognition.style.display = 'block';
+            cameraSwapBtn.style.display = 'block';
         }
+
+        // Submit button click handler
+        submitBtn.addEventListener('click', async () => {
+            const pluriId = pluriIdInput.value.trim();
+            if (!pluriId) {
+                showMessage('Veuillez entrer votre Pluri ID', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pluriId: pluriId })
+                });
+                
+                const data = await response.json();
+                handleInputResult(data);
+            } catch (error) {
+                handleScanError(error);
+            }
+        });
 
         async function startFacialRecognition(empId, isSwapping = false) {
             try {
@@ -110,7 +134,7 @@
                 switchToFacialRecognition();
 
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error('Camera access not supported');
+                    throw new Error('Caméra non supportée');
                 }
 
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -124,7 +148,6 @@
                 currentStream = stream;
                 faceVideo.srcObject = stream;
                 
-                // Wait for video to be ready
                 await new Promise((resolve) => {
                     faceVideo.onloadedmetadata = () => {
                         faceVideo.play();
@@ -132,7 +155,6 @@
                     };
                 });
 
-                // Wait a bit for the camera to adjust
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
                 const interval = setInterval(async () => {
@@ -168,7 +190,7 @@
                                 const data = await response.json();
                                 handleFacialRecognitionResult(data);
                             } catch (error) {
-                                console.error('Facial recognition request failed:', error);
+                                console.error('Echec de la reconnaissance faciale:', error);
                                 handleScanError(error);
                             }
                         }
@@ -189,7 +211,7 @@
                     window.location.reload();
                 } else {
                     isProcessing = false;
-                    switchToQRScanning();
+                    switchToInput();
                 }
             }, 2000);
         }
@@ -204,60 +226,28 @@
             showMessage(message, 'error');
         }
 
-        function handleQRScanResult(data) {
+        function handleInputResult(data) {
             if (data.status === 'success') {
                 if (data.faceEnabled) {
-                    showMessage("Code QR Scanné.", 'success')
-                    html5QrcodeScanner.clear();
+                    showMessage("ID reconnaissable. En cours de reconnaissance faciale...", 'success');
                     startFacialRecognition(data.empId);
                 } else {
-                    showMessage(data.message, data.status)
+                    showMessage(data.message, data.status);
                     setTimeout(() => window.location.reload(), 2000);
                 }
             } else {
-                showMessage(data.message, 400);
-                setTimeout(() => switchToQRScanning(), 2000);
+                showMessage(data.message, data.status);
+                pluriIdInput.value = '';
             }
         }
 
         function handleScanError(error) {
             console.error('Error:', error);
-            showError('Error processing. Please try again.');
-            setTimeout(() => switchToQRScanning(), 2000);
+            showError('Erreure lors de la reconnaissance faciale. Veuillez recommencer.');
+            setTimeout(() => switchToInput(), 2000);
         }
 
-        async function onScanSuccess(decodedText) {
-            try {
-                await html5QrcodeScanner.stop();
-                
-                const response = await fetch('/scan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ qr_data: decodedText })
-                });
-                
-                const data = await response.json();
-                handleQRScanResult(data);
-            } catch (error) {
-                handleScanError(error);
-            }
-        }
-
-        function onScanError(errorMessage) {
-            console.log(errorMessage);
-        }
-
-        function startScanner() {
-            html5QrcodeScanner.start(
-                { facingMode: currentFacingMode },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                onScanSuccess,
-                onScanError
-            );
-        }
-
-        // Initialize the scanner
-        switchToQRScanning();
+        switchToInput();
     });
 </script>
 {% endblock %}

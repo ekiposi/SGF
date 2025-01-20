@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import random
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
@@ -25,7 +26,8 @@ DEFAULT_SETTINGS = {
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_YA14kHqPLGBGgSL3r91@mysql-2a126491-exodus.g.aivencloud.com:18235/defaultdb?ssl_verify_cert=false'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://avnadmin:AVNS_27qYEQ73um8LQWstz1f@mysql-b8de79d-freefire-fcea.g.aivencloud.com:25829/defaultdb'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Dinu30903%40@localhost/scyan'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder)
 BACKUP_DIR = os.path.join(app.root_path, 'instance', 'backups')
@@ -215,7 +217,7 @@ def employees():
         print("Form data:", request.form)
         
         # Generate unique employee ID
-        pluri_id = Employee.generate_pluri_id()
+        pluri_id = str(random.randint(10000, 99999))
         
         # Split full name into first and last name
         full_name = request.form.get('full_name', '').strip()
@@ -388,7 +390,7 @@ def handle_attendance(employee):
             print('NO schedule')
             return {
             'status': 'error',
-            'message': f'No schedule found for the employee.',
+            'message': f'Aucune plage horaire pour aujourd\'hui pour {employee.full_name}',
         }
         return {
             'status': 'success',
@@ -408,9 +410,9 @@ def scan():
                 config_data = json.load(config_file)
             
             data = request.json
-            qr_data = data.get('qr_data')
+            pluri_id = data.get('pluriId')
             
-            employee = Employee.query.filter_by(qr_data=qr_data).first()
+            employee = Employee.query.filter_by(pluri_id=pluri_id).first()
             if not employee:
                 return jsonify({'status': 'error', 'message': 'Code QR invalide'}), 400
             
@@ -839,12 +841,19 @@ def activity_data():
 def create_settings_table():
     try:
         conn = mysql.connector.connect(
-            host='mysql-2a126491-exodus.g.aivencloud.com',
-            user='avnadmin',
-            password='AVNS_YA14kHqPLGBGgSL3r91',
-            database='defaultdb',
-            port=18235
+            host='localhost',
+            user='root',
+            password='Dinu30903@',
+            database='scyan',
+            port=3306
         )
+        # conn = mysql.connector.connect(
+        #     host='mysql-2a126491-exodus.g.aivencloud.com',
+        #     user='avnadmin',
+        #     password='AVNS_YA14kHqPLGBGgSL3r91',
+        #     database='defaultdb',
+        #     port=18235
+        # )
         cursor = conn.cursor()
 
         cursor.execute('''
@@ -889,12 +898,19 @@ def backup():
     settings = DEFAULT_SETTINGS.copy() 
     try:
         conn = mysql.connector.connect(
-            host='mysql-2a126491-exodus.g.aivencloud.com',
-            user='avnadmin',
-            password='AVNS_YA14kHqPLGBGgSL3r91',
-            database='defaultdb',
-            port=18235
+            host='localhost',
+            user='root',
+            password='Dinu30903@',
+            database='scyan',
+            port=3306
         )
+        # conn = mysql.connector.connect(
+        #     host='mysql-2a126491-exodus.g.aivencloud.com',
+        #     user='avnadmin',
+        #     password='AVNS_YA14kHqPLGBGgSL3r91',
+        #     database='defaultdb',
+        #     port=18235
+        # )
         cursor = conn.cursor()
         create_settings_table()
         
@@ -935,12 +951,19 @@ def update_backup_settings():
     
     try:
         conn = mysql.connector.connect(
-            host='mysql-2a126491-exodus.g.aivencloud.com',
-            user='avnadmin',
-            password='AVNS_YA14kHqPLGBGgSL3r91',
-            database='defaultdb',
-            port=18235
+            host='localhost',
+            user='root',
+            password='Dinu30903@',
+            database='scyan',
+            port=3306
         )
+        # conn = mysql.connector.connect(
+        #     host='mysql-2a126491-exodus.g.aivencloud.com',
+        #     user='avnadmin',
+        #     password='AVNS_YA14kHqPLGBGgSL3r91',
+        #     database='defaultdb',
+        #     port=18235
+        # )
         cursor = conn.cursor()
         create_settings_table()
         cursor.execute('''
@@ -994,11 +1017,18 @@ def create_backup_file():
     try:
         cmd = [
             'mysqldump',
-            f'--host=mysql-2a126491-exodus.g.aivencloud.com',
-            f'--user=avnadmin',
-            f'--password=AVNS_YA14kHqPLGBGgSL3r91',
-            'defaultdb'
+            f'--host=localhost',
+            f'--user=root',
+            f'--password=Dinu30903@',
+            'scyan'
         ]
+        # cmd = [
+        #     'mysqldump',
+        #     f'--host=mysql-2a126491-exodus.g.aivencloud.com',
+        #     f'--user=avnadmin',
+        #     f'--password=AVNS_YA14kHqPLGBGgSL3r91',
+        #     'defaultdb'
+        # ]
         
         with open(backup_path, 'w') as f:
             subprocess.run(cmd, stdout=f, check=True)
@@ -1265,7 +1295,7 @@ def run_backup_scheduler():
         time.sleep(1)
 
 if __name__ == '__main__':
-    import threading
-    threading.Thread(target=run_backup_scheduler).start()
-    app.run(host='0.0.0.0', port=8000, debug=True)
-    # app.run(debug=True)
+    # import threading
+    # threading.Thread(target=run_backup_scheduler).start()
+    # app.run(host='localhost', port=8000, debug=True)
+    app.run(debug=True)
