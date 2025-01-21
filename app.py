@@ -390,7 +390,7 @@ def handle_attendance(employee):
             print('NO schedule')
             return {
             'status': 'error',
-            'message': f'No schedule found for the employee.',
+            'message': f'Aucun emploi du temps pour aujourd\'hui pour {employee.full_name}',
         }
         return {
             'status': 'success',
