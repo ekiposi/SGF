@@ -5,35 +5,35 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-gray-800">Notifications</h2>
         {% if employees_without_schedules %}
-            <button onclick="downloadPDF()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Télécharger en PDF
-            </button>
+        <button onclick="downloadPDF()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Télécharger en PDF
+        </button>
         {% endif %}
     </div>
 
     {% if employees_without_schedules %}
-        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6" role="alert">
-            <p class="font-semibold">Employés ayant un horaire vide dans deux jours:</p>
-            <ul class="mt-2 space-y-2" id="employeeList">
-                {% for employee in employees_without_schedules %}
-                    <li class="flex items-center">
-                        <div class="bg-yellow-500 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">
-                            {{ loop.index }}
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-lg font-medium text-gray-700">
-                                <span class="employee-name">{{ employee.first_name }} {{ employee.last_name }}</span>
-                                <span class="employee-id bg-gray-300 px-2 py-1 rounded-full">{{ employee.pluri_id }}</span>
-                            </p>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6" role="alert">
+        <p class="font-semibold">Employés ayant un horaire vide dans deux jours:</p>
+        <ul class="mt-2 space-y-2" id="employeeList">
+            {% for employee in employees_without_schedules %}
+            <li class="flex items-center">
+                <div class="bg-yellow-500 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">
+                    {{ loop.index }}
+                </div>
+                <div class="ml-4">
+                    <p class="text-lg font-medium text-gray-700">
+                        <span class="employee-name">{{ employee.first_name }} {{ employee.last_name }}</span>
+                        <span class="employee-id bg-gray-300 px-2 py-1 rounded-full">{{ employee.pluri_id }}</span>
+                    </p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
     {% else %}
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
-            <p class="font-semibold">All employees have scheduled jobs.</p>
-        </div>
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
+        <p class="font-semibold">All employees have scheduled jobs.</p>
+    </div>
     {% endif %}
 </div>
 
@@ -46,14 +46,14 @@
         const marginLeft = 10;
         const marginRight = 10;
         const contentWidth = pageWidth - marginLeft - marginRight;
-        
+
         // Header section
         doc.setFontSize(16);
-        doc.text('PluriMedic | Gestion d\'entrepôt', pageWidth / 2, 20, { align: 'center' });
-        
+        doc.text('CHNDLM | Gestion de présences', pageWidth / 2, 20, { align: 'center' });
+
         doc.setFontSize(10);
         doc.text('Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti', pageWidth / 2, 30, { align: 'center' });
-        doc.text('Email: info@hopitalplurimedic.com', pageWidth / 2, 35, { align: 'center' });
+        doc.text('Email: presencechndlm@gmail.com', pageWidth / 2, 35, { align: 'center' });
         doc.text('Téléphone: +509 46 16 3878', pageWidth / 2, 40, { align: 'center' });
 
         // Separator line
@@ -70,21 +70,21 @@
 
         let yPosition = 80;
         const employees = document.querySelectorAll('#employeeList li');
-        
+
         employees.forEach((employee, index) => {
             const nameElement = employee.querySelector('.employee-name');
             const idElement = employee.querySelector('.employee-id');
-            
+
             doc.setTextColor(0, 51, 102);
             doc.text(`${index + 1}. ${nameElement.textContent.trim()}`, marginLeft, yPosition);
-            
+
             const nameWidth = doc.getTextWidth(`${index + 1}. ${nameElement.textContent.trim()}`);
-            
+
             doc.setTextColor(88, 88, 88);
             doc.text(`(${idElement.textContent.trim()})`, marginLeft + nameWidth + 5, yPosition);
-            
+
             doc.setTextColor(0, 0, 0);
-            
+
             yPosition += 10;
         });
 

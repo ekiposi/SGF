@@ -7,7 +7,8 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Planning Général des Employés</h1>
         <div>
-            <button onclick="handleSchedule()" class="bg-indigo-800 text-white px-4 py-2 rounded-lg hover:bg-indigo-900 transition-all duration-150">
+            <button onclick="handleSchedule()"
+                class="bg-indigo-800 text-white px-4 py-2 rounded-lg hover:bg-indigo-900 transition-all duration-150">
                 <i class="fas fa-user me-2"></i>Assigner des horaires</button>
             <button onclick="exportToPDF()"
                 class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-150">
@@ -62,12 +63,12 @@
 
 <script>
     function exportToPDF() {
-    const header = document.createElement('div');
-    header.innerHTML = `
+        const header = document.createElement('div');
+        header.innerHTML = `
         <div style="text-align: center; padding: 20px; font-family: Arial, sans-serif;">
-            <h1 style="font-size: 20px; margin-bottom: 10px;">PluriMedic | Gestion de présence</h1>
+            <h1 style="font-size: 20px; margin-bottom: 10px;">CHNDLM | Gestion de présence</h1>
             <p style="font-size: 12px; margin: 5px 0;">Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti</p>
-            <p style="font-size: 12px; margin: 5px 0;">Email: info@hopitalplurimedic.com</p>
+            <p style="font-size: 12px; margin: 5px 0;">Email: presencechndlm@gmail.com</p>
             <p style="font-size: 12px; margin: 5px 0;">Téléphone: +509 46 16 3878</p>
             <hr style="border: 1px solid #000; margin: 15px 0;">
             <h2 style="font-size: 16px; margin: 15px 0;">Planning Général des Employés</h2>
@@ -75,40 +76,40 @@
         </div>
     `;
 
-    const element = document.getElementById('scheduleTable');
-    const opt = {
-        margin: [0.75, 0.75, 0.75, 0.75],
-        filename: 'planning-general.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,
-            useCORS: true
-        },
-        jsPDF: { 
-            unit: 'in', 
-            format: 'a4', 
-            orientation: 'landscape',
-            putOnlyUsedFonts: true
-        }
-    };
+        const element = document.getElementById('scheduleTable');
+        const opt = {
+            margin: [0.75, 0.75, 0.75, 0.75],
+            filename: 'planning-general.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true
+            },
+            jsPDF: {
+                unit: 'in',
+                format: 'a4',
+                orientation: 'landscape',
+                putOnlyUsedFonts: true
+            }
+        };
 
-    const content = document.createElement('div');
-    content.appendChild(header.cloneNode(true));
-    
-    const spacer = document.createElement('div');
-    spacer.style.height = '20px';
-    content.appendChild(spacer);
-    
-    const tableClone = element.cloneNode(true);
-    tableClone.style.width = '100%';
-    content.appendChild(tableClone);
+        const content = document.createElement('div');
+        content.appendChild(header.cloneNode(true));
 
-    html2pdf()
-        .set(opt)
-        .from(content)
-        .save()
-        .catch(err => console.error('Error generating PDF:', err));
-}
+        const spacer = document.createElement('div');
+        spacer.style.height = '20px';
+        content.appendChild(spacer);
+
+        const tableClone = element.cloneNode(true);
+        tableClone.style.width = '100%';
+        content.appendChild(tableClone);
+
+        html2pdf()
+            .set(opt)
+            .from(content)
+            .save()
+            .catch(err => console.error('Error generating PDF:', err));
+    }
     function handleSchedule() {
         window.location.href = "{{ url_for('edit_schedules') }}";
     }

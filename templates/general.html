@@ -3,570 +3,572 @@
 {% block content %}
 
 <style>
-    /* Base form styles */
-.form-input,
-.form-select {
-  transition: colors 0.2s;
-}
+  /* Base form styles */
+  .form-input,
+  .form-select {
+    transition: colors 0.2s;
+  }
 
-.form-group {
-  position: relative;
-}
+  .form-group {
+    position: relative;
+  }
 
-.form-group:focus-within label {
-  color: #3b82f6;
-}
+  .form-group:focus-within label {
+    color: #3b82f6;
+  }
 
-/* DataTable wrapper and container */
-.dataTables_wrapper {
-  @apply m-5 p-5 bg-white rounded-lg shadow-sm;
-}
+  /* DataTable wrapper and container */
+  .dataTables_wrapper {
+    @apply m-5 p-5 bg-white rounded-lg shadow-sm;
+  }
 
-/* Search and length controls */
-.dataTables_filter,
-.dataTables_length {
-  @apply mb-5;
-}
+  /* Search and length controls */
+  .dataTables_filter,
+  .dataTables_length {
+    @apply mb-5;
+  }
 
-.dataTables_filter input,
-.dataTables_length select {
-  @apply px-3 py-2 border border-slate-200 rounded-md;
-}
+  .dataTables_filter input,
+  .dataTables_length select {
+    @apply px-3 py-2 border border-slate-200 rounded-md;
+  }
 
-.dataTables_length select {
-  @apply mx-2;
-}
+  .dataTables_length select {
+    @apply mx-2;
+  }
 
-/* Table styling */
-.dataTable {
-  @apply w-full border-collapse;
-}
+  /* Table styling */
+  .dataTable {
+    @apply w-full border-collapse;
+  }
 
-.dataTable thead th {
-  @apply bg-slate-50 text-slate-800 font-semibold p-4 border-b-2 border-slate-200 text-left;
-}
+  .dataTable thead th {
+    @apply bg-slate-50 text-slate-800 font-semibold p-4 border-b-2 border-slate-200 text-left;
+  }
 
-.dataTable tbody td {
-  @apply p-4 border-b border-slate-200 text-slate-600;
-}
+  .dataTable tbody td {
+    @apply p-4 border-b border-slate-200 text-slate-600;
+  }
 
-.dataTable tbody tr:hover {
-  @apply bg-slate-50;
-}
+  .dataTable tbody tr:hover {
+    @apply bg-slate-50;
+  }
 
-/* Pagination */
-.dataTables_paginate {
-  @apply mt-5 flex justify-end gap-1;
-}
+  /* Pagination */
+  .dataTables_paginate {
+    @apply mt-5 flex justify-end gap-1;
+  }
 
-.dataTables_paginate .paginate_button {
-  @apply px-3 py-2 border border-slate-200 rounded-md cursor-pointer text-slate-600;
-}
+  .dataTables_paginate .paginate_button {
+    @apply px-3 py-2 border border-slate-200 rounded-md cursor-pointer text-slate-600;
+  }
 
-.dataTables_paginate .paginate_button:hover {
-  @apply bg-slate-50;
-}
+  .dataTables_paginate .paginate_button:hover {
+    @apply bg-slate-50;
+  }
 
-.dataTables_paginate .paginate_button.current {
-  @apply bg-blue-500 text-white border-blue-500;
-}
+  .dataTables_paginate .paginate_button.current {
+    @apply bg-blue-500 text-white border-blue-500;
+  }
 
-.dataTables_paginate .paginate_button.disabled {
-  @apply opacity-50 cursor-not-allowed;
-}
+  .dataTables_paginate .paginate_button.disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
 
-/* Custom scrollbar */
-.dataTables_wrapper::-webkit-scrollbar {
-  @apply w-2 h-2;
-}
+  /* Custom scrollbar */
+  .dataTables_wrapper::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
 
-.dataTables_wrapper::-webkit-scrollbar-track {
-  @apply bg-slate-100;
-}
+  .dataTables_wrapper::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
 
-.dataTables_wrapper::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
-}
+  .dataTables_wrapper::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
 
-.dataTables_wrapper::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400;
-}
+  .dataTables_wrapper::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
 </style>
 <div class="container mt-4">
+  <!-- Facial Verification Control Panel -->
+  <div class="container mt-4">
     <!-- Facial Verification Control Panel -->
-    <div class="container mt-4">
-        <!-- Facial Verification Control Panel -->
-        <div class="card mb-4 card-top">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-face-viewfinder me-2"></i>Contrôle par la Verification Faciale
-                </h5>
-                <div class="verification-status">
-                    <span class="badge {{ 'bg-success' if face_recg_enabled else 'bg-danger' }}" id="verificationStatusBadge">
-                        <i class="fas {{ 'fa-check-circle' if face_recg_enabled else 'fa-times-circle' }} me-1"></i>
-                        {{ 'Activé' if face_recg_enabled else 'Désactivé' }}
-                    </span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <button class="btn btn-primary" type="button" id="openQRScanner">
-                            <i class="fas fa-qrcode me-1"></i>Scanner le QR Code
-                        </button>
-                        <small class="text-muted">Scan the QR code to enable/disable facial recognition</small>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="verificationToggle" {% if face_recg_enabled %}checked{% endif %} disabled>
-                            <label class="form-check-label" for="verificationToggle">Vérification Faciale</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card mb-4 card-top">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-face-viewfinder me-2"></i>Contrôle par la Verification Faciale
+        </h5>
+        <div class="verification-status">
+          <span class="badge {{ 'bg-success' if face_recg_enabled else 'bg-danger' }}" id="verificationStatusBadge">
+            <i class="fas {{ 'fa-check-circle' if face_recg_enabled else 'fa-times-circle' }} me-1"></i>
+            {{ 'Activé' if face_recg_enabled else 'Désactivé' }}
+          </span>
         </div>
-
-        <div class="card-body">
-            <div class="mb-4">
-                <div class="btn-group" role="group" aria-label="Attendance Filters">
-                    <button type="button" class="btn btn-outline-primary" onclick="filterAttendance('all')">
-                        <i class="fas fa-list me-1"></i>Tous
-                    </button>
-                    <button type="button" class="btn btn-outline-success" onclick="filterAttendance('present')">
-                        <i class="fas fa-check me-1"></i>Présent
-                    </button>
-                    <button type="button" class="btn btn-outline-warning" onclick="filterAttendance('late')">
-                        <i class="fas fa-clock me-1"></i>En retard
-                    </button>
-                </div>
-                <button class="btn btn-primary ms-2" onclick="generateReport()">
-                    <i class="fas fa-file-export me-1"></i>Générer Rapport PDF
-                </button>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <button class="btn btn-primary" type="button" id="openQRScanner">
+              <i class="fas fa-qrcode me-1"></i>Scanner le QR Code
+            </button>
+            <small class="text-muted">Scan the QR code to enable/disable facial recognition</small>
+          </div>
+          <div class="col-md-4 text-end">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="verificationToggle" {% if face_recg_enabled
+                %}checked{% endif %} disabled>
+              <label class="form-check-label" for="verificationToggle">Vérification Faciale</label>
             </div>
-    <!-- Attendance Information Table -->
-    <div class="card card-bottom">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="mb-4">
+        <div class="btn-group" role="group" aria-label="Attendance Filters">
+          <button type="button" class="btn btn-outline-primary" onclick="filterAttendance('all')">
+            <i class="fas fa-list me-1"></i>Tous
+          </button>
+          <button type="button" class="btn btn-outline-success" onclick="filterAttendance('present')">
+            <i class="fas fa-check me-1"></i>Présent
+          </button>
+          <button type="button" class="btn btn-outline-warning" onclick="filterAttendance('late')">
+            <i class="fas fa-clock me-1"></i>En retard
+          </button>
+        </div>
+        <button class="btn btn-primary ms-2" onclick="generateReport()">
+          <i class="fas fa-file-export me-1"></i>Générer Rapport PDF
+        </button>
+      </div>
+      <!-- Attendance Information Table -->
+      <div class="card card-bottom">
         <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-clock me-2"></i>Présences en temps réel
-            </h5>
+          <h5 class="card-title mb-0">
+            <i class="fas fa-clock me-2"></i>Présences en temps réel
+          </h5>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" id="attendanceTable">
-                    <thead>
-                        <tr>
-                            <th>Employé</th>
-                            <th>ID</th>
-                            <th>Départment</th>
-                            <th>Arrivee</th>
-                            <th>Validation de la Face</th>
-                            <th>Depart</th>
-                            <th>Heures Totales</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for record in attendance_data %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ url_for('static', filename=record.photo) }}" class="me-2 img-fluid" alt="Profile" height="50" width="50" style="border-radius: 100%;">
-                                    <div>
-                                        <div class="fw-bold">{{ record.employee }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>{{ record.id }}</td>
-                            <td>{{ record.department }}</td>
-                            <td>
-                                <div class="text-success">
-                                    <i class="fas fa-sign-in-alt me-1"></i>
-                                    {{ record.check_in }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge {{ 'bg-success' if record.face_validation else 'bg-danger' }}">
-                                    <i class="fas {{ 'fa-check' if record.face_validation else 'fa-times' }} me-1"></i>
-                                    {{ 'Vérifié' if record.face_validation else 'Non Verifié' }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if record.check_out %}
-                                <div class="text-success">
-                                    <i class="fas fa-sign-out-alt me-1"></i>
-                                    {{ record.check_out }}
-                                </div>
-                                {% else %}
-                                <div class="text-danger">
-                                    <i class="fas fa-minus-circle me-1"></i>
-                                    Aucun départ
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td>{{ record.total_hours or '--:--' }}</td>
-                            <td>
-                                {% if record.status == 'present' %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check me-1"></i>Présent
-                                </span>
-                                {% elif record.status == 'late' %}
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-clock me-1"></i>En retard
-                                </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+          <div class="table-responsive">
+            <table class="table table-hover" id="attendanceTable">
+              <thead>
+                <tr>
+                  <th>Employé</th>
+                  <th>ID</th>
+                  <th>Départment</th>
+                  <th>Arrivee</th>
+                  <th>Validation de la Face</th>
+                  <th>Depart</th>
+                  <th>Heures Totales</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in attendance_data %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <img src="{{ url_for('static', filename=record.photo) }}" class="me-2 img-fluid" alt="Profile"
+                        height="50" width="50" style="border-radius: 100%;">
+                      <div>
+                        <div class="fw-bold">{{ record.employee }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ record.id }}</td>
+                  <td>{{ record.department }}</td>
+                  <td>
+                    <div class="text-success">
+                      <i class="fas fa-sign-in-alt me-1"></i>
+                      {{ record.check_in }}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge {{ 'bg-success' if record.face_validation else 'bg-danger' }}">
+                      <i class="fas {{ 'fa-check' if record.face_validation else 'fa-times' }} me-1"></i>
+                      {{ 'Vérifié' if record.face_validation else 'Non Verifié' }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if record.check_out %}
+                    <div class="text-success">
+                      <i class="fas fa-sign-out-alt me-1"></i>
+                      {{ record.check_out }}
+                    </div>
+                    {% else %}
+                    <div class="text-danger">
+                      <i class="fas fa-minus-circle me-1"></i>
+                      Aucun départ
+                    </div>
+                    {% endif %}
+                  </td>
+                  <td>{{ record.total_hours or '--:--' }}</td>
+                  <td>
+                    {% if record.status == 'present' %}
+                    <span class="badge bg-success">
+                      <i class="fas fa-check me-1"></i>Présent
+                    </span>
+                    {% elif record.status == 'late' %}
+                    <span class="badge bg-warning">
+                      <i class="fas fa-clock me-1"></i>En retard
+                    </span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-<div id="qrScannerModal" class="modal fade" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div id="qrScannerModal" class="modal fade" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="qrScannerModalLabel">Scanner le QR Code</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="qr-reader" style="width: 100%;"></div>
-            </div>
+          <div class="modal-header">
+            <h5 class="modal-title" id="qrScannerModalLabel">Scanner le QR Code</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="qr-reader" style="width: 100%;"></div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-<script>
-const { jsPDF } = window.jspdf;
-const CONFIG = {
-  ANIMATION: {
-    DURATION: 0.8,
-    EASE: "power2.out",
-    BACK_EASE: "back.out(1.7)"
-  },
-  QR: {
-    FPS: 10,
-    BOX_SIZE: 250,
-    ALERT_DURATION: 5000
-  },
-  VALID_QR_CODES: {
-    ENABLE: "A7c!v@P#M21",
-    DISABLE: "D3$@c7!vP!uR!M3D!c"
-  }
-};
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script>
+      const { jsPDF } = window.jspdf;
+      const CONFIG = {
+        ANIMATION: {
+          DURATION: 0.8,
+          EASE: "power2.out",
+          BACK_EASE: "back.out(1.7)"
+        },
+        QR: {
+          FPS: 10,
+          BOX_SIZE: 250,
+          ALERT_DURATION: 5000
+        },
+        VALID_QR_CODES: {
+          ENABLE: "A7c!v@P#M21",
+          DISABLE: "D3$@c7!vP!uR!M3D!c"
+        }
+      };
 
-const utils = {
-  createAlert(message, type) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `
+      const utils = {
+        createAlert(message, type) {
+          const alert = document.createElement('div');
+          alert.className = `alert alert-${type} alert-dismissible fade show`;
+          alert.innerHTML = `
       <i class="fas fa-info-circle me-2"></i>${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    return alert;
-  },
+          return alert;
+        },
 
-  removeHTMLTags: text => text?.replace(/<[^>]*>/g, '').trim() || '',
+        removeHTMLTags: text => text?.replace(/<[^>]*>/g, '').trim() || '',
 
-  async fetchJSON(url, options) {
-    try {
-      const response = await fetch(url, options);
-      return await response.json();
-    } catch (error) {
-      console.error('Fetch error:', error);
-      throw error;
-    }
-  }
-};
+        async fetchJSON(url, options) {
+          try {
+            const response = await fetch(url, options);
+            return await response.json();
+          } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+          }
+        }
+      };
 
-class DataTableController {
-  constructor() {
-    this.table = null;
-  }
+      class DataTableController {
+        constructor() {
+          this.table = null;
+        }
 
-  initialize() {
-    this.table = new DataTable('#attendanceTable', {
-      responsive: true,
-      language: {
-        emptyTable: "Aucune donnée disponible",
-        info: "Affichage de _START_ à _END_ sur _TOTAL_ entrées",
-        infoEmpty: "Affichage de 0 à 0 sur 0 entrées",
-        infoFiltered: "(filtré sur _MAX_ entrées au total)",
-        lengthMenu: "Afficher _MENU_ entrées",
-        loadingRecords: "Chargement...",
-        processing: "Traitement...",
-        search: "Rechercher:"
+        initialize() {
+          this.table = new DataTable('#attendanceTable', {
+            responsive: true,
+            language: {
+              emptyTable: "Aucune donnée disponible",
+              info: "Affichage de _START_ à _END_ sur _TOTAL_ entrées",
+              infoEmpty: "Affichage de 0 à 0 sur 0 entrées",
+              infoFiltered: "(filtré sur _MAX_ entrées au total)",
+              lengthMenu: "Afficher _MENU_ entrées",
+              loadingRecords: "Chargement...",
+              processing: "Traitement...",
+              search: "Rechercher:"
+            }
+          });
+          return this.table;
+        }
+
+        filterAttendance(status) {
+          const buttons = document.querySelectorAll('.btn-group .btn');
+          buttons.forEach(btn => btn.classList.remove('active'));
+
+          const clickedButton = document.querySelector(`.btn-group .btn[onclick*="${status}"]`);
+          clickedButton?.classList.add('active');
+
+          this.table.column(7).search(
+            status === 'all' ? '' :
+              status === 'present' ? 'Présent' : 'En retard',
+            true,
+            false
+          ).draw();
+        }
       }
-    });
-    return this.table;
-  }
 
-  filterAttendance(status) {
-    const buttons = document.querySelectorAll('.btn-group .btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    
-    const clickedButton = document.querySelector(`.btn-group .btn[onclick*="${status}"]`);
-    clickedButton?.classList.add('active');
+      class AnimationController {
+        initialize() {
+          gsap.set([".card-top", ".card-bottom"], {
+            visibility: "hidden",
+            opacity: 0
+          });
+        }
 
-    this.table.column(7).search(
-      status === 'all' ? '' : 
-      status === 'present' ? 'Présent' : 'En retard', 
-      true, 
-      false
-    ).draw();
-  }
-}
+        playEntryAnimation() {
+          gsap.set([".card-top", ".card-bottom"], { visibility: "visible" });
 
-class AnimationController {
-  initialize() {
-    gsap.set([".card-top", ".card-bottom"], {
-      visibility: "hidden",
-      opacity: 0
-    });
-  }
+          const tl = gsap.timeline({
+            defaults: {
+              duration: CONFIG.ANIMATION.DURATION,
+              ease: CONFIG.ANIMATION.EASE
+            }
+          });
 
-  playEntryAnimation() {
-    gsap.set([".card-top", ".card-bottom"], { visibility: "visible" });
-    
-    const tl = gsap.timeline({
-      defaults: {
-        duration: CONFIG.ANIMATION.DURATION,
-        ease: CONFIG.ANIMATION.EASE
+          tl.fromTo(".card-top",
+            { opacity: 0, x: -50 },
+            { opacity: 1, x: 0, duration: 1, ease: CONFIG.ANIMATION.BACK_EASE }
+          ).fromTo(".card-bottom",
+            { opacity: 0, x: 50 },
+            { opacity: 1, x: 0, duration: 1, ease: CONFIG.ANIMATION.BACK_EASE },
+            "-=0.5"
+          );
+        }
       }
-    });
 
-    tl.fromTo(".card-top", 
-      { opacity: 0, x: -50 },
-      { opacity: 1, x: 0, duration: 1, ease: CONFIG.ANIMATION.BACK_EASE }
-    ).fromTo(".card-bottom",
-      { opacity: 0, x: 50 },
-      { opacity: 1, x: 0, duration: 1, ease: CONFIG.ANIMATION.BACK_EASE },
-      "-=0.5"
-    );
-  }
-}
+      // QR Scanner Controller
+      class QRScannerController {
+        constructor() {
+          this.scanner = null;
+          this.isRunning = false;
+          this.verificationBadge = null;
+          this.verificationToggle = null;
+        }
 
-// QR Scanner Controller
-class QRScannerController {
-  constructor() {
-    this.scanner = null;
-    this.isRunning = false;
-    this.verificationBadge = null;
-    this.verificationToggle = null;
-  }
+        initialize(badge, toggle) {
+          this.verificationBadge = badge;
+          this.verificationToggle = toggle;
 
-  initialize(badge, toggle) {
-    this.verificationBadge = badge;
-    this.verificationToggle = toggle;
-    
-    document.getElementById('openQRScanner').addEventListener('click', 
-      () => this.openScanner()
-    );
-    
-    this.setupModalListener();
-  }
+          document.getElementById('openQRScanner').addEventListener('click',
+            () => this.openScanner()
+          );
 
-  async openScanner() {
-    const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
-    modal.show();
+          this.setupModalListener();
+        }
 
-    if (!this.scanner) {
-      this.scanner = new Html5Qrcode("qr-reader");
-    }
+        async openScanner() {
+          const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
+          modal.show();
 
-    if (!this.isRunning) {
-      await this.startScanner(modal);
-    }
-  }
+          if (!this.scanner) {
+            this.scanner = new Html5Qrcode("qr-reader");
+          }
 
-  async startScanner(modal) {
-    try {
-      await this.scanner.start(
-        { facingMode: "environment" },
-        { fps: CONFIG.QR.FPS, qrbox: CONFIG.QR.BOX_SIZE },
-        (decodedText) => this.handleScanSuccess(decodedText, modal)
-      );
-      this.isRunning = true;
-    } catch (error) {
-      console.error('Scanner error:', error);
-      this.showAlert('Scanner initialization failed', 'danger');
-    }
-  }
+          if (!this.isRunning) {
+            await this.startScanner(modal);
+          }
+        }
 
-  setupModalListener() {
-    document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal', 
-      async () => {
-        if (this.scanner && this.isRunning) {
+        async startScanner(modal) {
+          try {
+            await this.scanner.start(
+              { facingMode: "environment" },
+              { fps: CONFIG.QR.FPS, qrbox: CONFIG.QR.BOX_SIZE },
+              (decodedText) => this.handleScanSuccess(decodedText, modal)
+            );
+            this.isRunning = true;
+          } catch (error) {
+            console.error('Scanner error:', error);
+            this.showAlert('Scanner initialization failed', 'danger');
+          }
+        }
+
+        setupModalListener() {
+          document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal',
+            async () => {
+              if (this.scanner && this.isRunning) {
+                try {
+                  await this.scanner.stop();
+                  this.isRunning = false;
+                } catch (error) {
+                  console.error('Scanner stop error:', error);
+                }
+              }
+            }
+          );
+        }
+
+        async handleScanSuccess(code, modal) {
           try {
             await this.scanner.stop();
             this.isRunning = false;
+            modal.hide();
+            this.validateQRCode(code);
           } catch (error) {
-            console.error('Scanner stop error:', error);
+            console.error('Scan handling error:', error);
           }
         }
-      }
-    );
-  }
 
-  async handleScanSuccess(code, modal) {
-    try {
-      await this.scanner.stop();
-      this.isRunning = false;
-      modal.hide();
-      this.validateQRCode(code);
-    } catch (error) {
-      console.error('Scan handling error:', error);
-    }
-  }
+        validateQRCode(code) {
+          const face = code === CONFIG.VALID_QR_CODES.ENABLE;
 
-  validateQRCode(code) {
-    const face = code === CONFIG.VALID_QR_CODES.ENABLE;
-    
-    if (code !== CONFIG.VALID_QR_CODES.ENABLE && code !== CONFIG.VALID_QR_CODES.DISABLE) {
-      this.showAlert('QR Code Incorrect', 'danger');
-      return;
-    }
+          if (code !== CONFIG.VALID_QR_CODES.ENABLE && code !== CONFIG.VALID_QR_CODES.DISABLE) {
+            this.showAlert('QR Code Incorrect', 'danger');
+            return;
+          }
 
-    this.updateServerStatus(face);
-  }
+          this.updateServerStatus(face);
+        }
 
-  async updateServerStatus(face) {
-    try {
-      const data = await utils.fetchJSON('/general', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({ 'face-recg': face })
-      });
+        async updateServerStatus(face) {
+          try {
+            const data = await utils.fetchJSON('/general', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: JSON.stringify({ 'face-recg': face })
+            });
 
-      if (data.success) {
-        this.updateVerificationStatus(data["face-recg"]);
-        this.showAlert(
-          `Face Recognition ${data["face-recg"] ? "Enabled" : "Disabled"}`,
-          'success'
-        );
-      } else {
-        throw new Error('Server update failed');
-      }
-    } catch (error) {
-      this.showAlert(
-        'Une erreur est survenue lors de la mise à jour du statut de vérification.',
-        'danger'
-      );
-      console.error(error);
-    }
-  }
+            if (data.success) {
+              this.updateVerificationStatus(data["face-recg"]);
+              this.showAlert(
+                `Face Recognition ${data["face-recg"] ? "Enabled" : "Disabled"}`,
+                'success'
+              );
+            } else {
+              throw new Error('Server update failed');
+            }
+          } catch (error) {
+            this.showAlert(
+              'Une erreur est survenue lors de la mise à jour du statut de vérification.',
+              'danger'
+            );
+            console.error(error);
+          }
+        }
 
-  updateVerificationStatus(enabled) {
-    const [oldClass, newClass] = enabled ? 
-      ['bg-danger', 'bg-success'] : 
-      ['bg-success', 'bg-danger'];
-    
-    this.verificationBadge.classList.replace(oldClass, newClass);
-    this.verificationBadge.innerHTML = `
+        updateVerificationStatus(enabled) {
+          const [oldClass, newClass] = enabled ?
+            ['bg-danger', 'bg-success'] :
+            ['bg-success', 'bg-danger'];
+
+          this.verificationBadge.classList.replace(oldClass, newClass);
+          this.verificationBadge.innerHTML = `
       <i class="fas fa-${enabled ? 'check' : 'times'}-circle me-1"></i>
       ${enabled ? 'Activé' : 'Désactivé'}
     `;
-    this.verificationToggle.checked = enabled;
-  }
+          this.verificationToggle.checked = enabled;
+        }
 
-  showAlert(message, type) {
-    const alert = utils.createAlert(message, type);
-    document.querySelector('.card:first-child').insertAdjacentElement('beforebegin', alert);
-    setTimeout(() => alert.remove(), CONFIG.QR.ALERT_DURATION);
-  }
-}
+        showAlert(message, type) {
+          const alert = utils.createAlert(message, type);
+          document.querySelector('.card:first-child').insertAdjacentElement('beforebegin', alert);
+          setTimeout(() => alert.remove(), CONFIG.QR.ALERT_DURATION);
+        }
+      }
 
-// Report Generator
-class ReportGenerator {
-  generateReport(table) {
-    const doc = new jsPDF();
-    this.addHeader(doc);
-    this.addTable(doc, table);
-    doc.save('attendance_report.pdf');
-  }
+      // Report Generator
+      class ReportGenerator {
+        generateReport(table) {
+          const doc = new jsPDF();
+          this.addHeader(doc);
+          this.addTable(doc, table);
+          doc.save('attendance_report.pdf');
+        }
 
-  addHeader(doc) {
-    doc.setFontSize(16);
-    doc.text('PluriMedic | Gestion de présence', 105, 20, { align: 'center' });
-    doc.setFontSize(10);
-    ['Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti',
-     'Email: info@hopitalplurimedic.com',
-     'Téléphone: +509 46 16 3878'
-    ].forEach((text, i) => {
-      doc.text(text, 105, 30 + (i * 5), { align: 'center' });
-    });
+        addHeader(doc) {
+          doc.setFontSize(16);
+          doc.text('CHNDLM | Gestion de présence', 105, 20, { align: 'center' });
+          doc.setFontSize(10);
+          ['Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti',
+            'Email: presencechndlm@gmail.com',
+            'Téléphone: +509 46 16 3878'
+          ].forEach((text, i) => {
+            doc.text(text, 105, 30 + (i * 5), { align: 'center' });
+          });
 
-    doc.setLineWidth(0.5);
-    doc.line(10, 45, 200, 45);
-  }
+          doc.setLineWidth(0.5);
+          doc.line(10, 45, 200, 45);
+        }
 
-  addTable(doc, table) {
-    const data = this.getFilteredData(table);
-    
-    doc.autoTable({
-      startY: 50,
-      head: [['Employé', 'ID', 'Départment', 'Arrivée', 'Départ', 'Heures', 'Status']],
-      body: data.map(record => [
-        record.employee,
-        record.id,
-        record.department,
-        record.checkin,
-        record.checkout,
-        record.hours,
-        record.status
-      ]),
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [59, 130, 246] }
-    });
-  }
+        addTable(doc, table) {
+          const data = this.getFilteredData(table);
 
-  getFilteredData(table) {
-    const data = [];
-    table.rows({ search: 'applied' }).every(function() {
-      const rowData = this.data();
-      data.push({
-        employee: utils.removeHTMLTags(rowData[0]),
-        id: rowData[1],
-        department: rowData[2],
-        checkin: utils.removeHTMLTags(rowData[3]),
-        checkout: utils.removeHTMLTags(rowData[5]),
-        hours: rowData[6],
-        status: utils.removeHTMLTags(rowData[7])
+          doc.autoTable({
+            startY: 50,
+            head: [['Employé', 'ID', 'Départment', 'Arrivée', 'Départ', 'Heures', 'Status']],
+            body: data.map(record => [
+              record.employee,
+              record.id,
+              record.department,
+              record.checkin,
+              record.checkout,
+              record.hours,
+              record.status
+            ]),
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [59, 130, 246] }
+          });
+        }
+
+        getFilteredData(table) {
+          const data = [];
+          table.rows({ search: 'applied' }).every(function () {
+            const rowData = this.data();
+            data.push({
+              employee: utils.removeHTMLTags(rowData[0]),
+              id: rowData[1],
+              department: rowData[2],
+              checkin: utils.removeHTMLTags(rowData[3]),
+              checkout: utils.removeHTMLTags(rowData[5]),
+              hours: rowData[6],
+              status: utils.removeHTMLTags(rowData[7])
+            });
+          });
+          return data;
+        }
+      }
+
+      // Initialize all controllers
+      document.addEventListener("DOMContentLoaded", () => {
+        const dataTable = new DataTableController();
+        const table = dataTable.initialize();
+
+        window.filterAttendance = status => dataTable.filterAttendance(status);
+
+        const animation = new AnimationController();
+        animation.initialize();
+        animation.playEntryAnimation();
+
+        const qrScanner = new QRScannerController();
+        qrScanner.initialize(
+          document.getElementById('verificationStatusBadge'),
+          document.getElementById('verificationToggle')
+        );
+
+        const reportGen = new ReportGenerator();
+        document.querySelector('.btn.btn-primary.ms-2').addEventListener('click',
+          () => reportGen.generateReport(table)
+        );
       });
-    });
-    return data;
-  }
-}
-
-// Initialize all controllers
-document.addEventListener("DOMContentLoaded", () => {
-  const dataTable = new DataTableController();
-  const table = dataTable.initialize();
-  
-  window.filterAttendance = status => dataTable.filterAttendance(status);
-  
-  const animation = new AnimationController();
-  animation.initialize();
-  animation.playEntryAnimation();
-  
-  const qrScanner = new QRScannerController();
-  qrScanner.initialize(
-    document.getElementById('verificationStatusBadge'),
-    document.getElementById('verificationToggle')
-  );
-  
-  const reportGen = new ReportGenerator();
-  document.querySelector('.btn.btn-primary.ms-2').addEventListener('click', 
-    () => reportGen.generateReport(table)
-  );
-});
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}

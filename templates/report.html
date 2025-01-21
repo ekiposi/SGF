@@ -413,114 +413,114 @@
     });
 </script>
 <script>
-function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const marginLeft = 10;
-    const marginRight = 10;
-    const contentWidth = pageWidth - marginLeft - marginRight;
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        const marginLeft = 10;
+        const marginRight = 10;
+        const contentWidth = pageWidth - marginLeft - marginRight;
 
-    // Header section
-    doc.setFontSize(16);
-    doc.text('PluriMedic | Gestion d\'entrepôt', pageWidth / 2, 20, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.text('Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti', pageWidth / 2, 30, { align: 'center' });
-    doc.text('Email: info@hopitalplurimedic.com', pageWidth / 2, 35, { align: 'center' });
-    doc.text('Téléphone: +509 46 16 3878', pageWidth / 2, 40, { align: 'center' });
+        // Header section
+        doc.setFontSize(16);
+        doc.text('CHNDLM | Gestion de présences', pageWidth / 2, 20, { align: 'center' });
 
-    // Separator line
-    doc.setLineWidth(0.5);
-    doc.line(marginLeft, 45, pageWidth - marginRight, 45);
+        doc.setFontSize(10);
+        doc.text('Adresse : 19, Rue 7, Babiole, Port-au-Prince, Haïti', pageWidth / 2, 30, { align: 'center' });
+        doc.text('Email: presencechndlm@gmail.com', pageWidth / 2, 35, { align: 'center' });
+        doc.text('Téléphone: +509 46 16 3878', pageWidth / 2, 40, { align: 'center' });
 
-    // Report title and date
-    doc.setFontSize(14);
-    doc.text('Rapport de présences - Résumé par employé', pageWidth / 2, 55, { align: 'center' });
-    
-    doc.setFontSize(10);
-    const currentDate = new Date().toLocaleDateString('fr-FR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    doc.text(`Généré le : ${currentDate}`, pageWidth / 2, 62, { align: 'center' });
+        // Separator line
+        doc.setLineWidth(0.5);
+        doc.line(marginLeft, 45, pageWidth - marginRight, 45);
 
-    // Filter information (if any filters are applied)
-    const dateFrom = document.getElementById('dateFrom')?.value;
-    const dateTo = document.getElementById('dateTo')?.value;
-    if (dateFrom && dateTo) {
-        doc.text(`Période : ${dateFrom} au ${dateTo}`, pageWidth / 2, 69, { align: 'center' });
-    }
+        // Report title and date
+        doc.setFontSize(14);
+        doc.text('Rapport de présences - Résumé par employé', pageWidth / 2, 55, { align: 'center' });
 
-    // Table data
-    const tableData = [];
-    $('#reportTable').DataTable().data().each(function(row) {
-        tableData.push([
-            row.pluri_id,
-            row.full_name,
-            row.department,
-            row.function,
-            row.days_present,
-            row.days_late,
-            row.days_absent,
-            row.days_vacation,
-            row.total_hours
-        ]);
-    });
+        doc.setFontSize(10);
+        const currentDate = new Date().toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        doc.text(`Généré le : ${currentDate}`, pageWidth / 2, 62, { align: 'center' });
 
-    // Enhanced table styling
-    doc.autoTable({
-        head: [['PluriId', 'Nom', 'Département', 'Fonction', 'Jours présent', 'Jours en retard', 'Jours absent', 'Jours congé', 'Heures totales']],
-        body: tableData,
-        startY: 70,
-        margin: { left: marginLeft, right: marginRight },
-        theme: 'grid',
-        styles: {
-            fontSize: 8,
-            cellPadding: 2,
-            overflow: 'linebreak'
-        },
-        headStyles: {
-            fillColor: [22, 160, 133],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold'
-        },
-        columnStyles: {
-            0: { cellWidth: 20 }, // PluriId
-            1: { cellWidth: 30 }, // Nom
-            2: { cellWidth: 25 }, // Département
-            3: { cellWidth: 25 }, // Fonction
-            4: { cellWidth: 15 }, // Jours présent
-            5: { cellWidth: 15 }, // Jours en retard
-            6: { cellWidth: 15 }, // Jours absent
-            7: { cellWidth: 15 }, // Jours congé
-            8: { cellWidth: 20 }  // Heures totales
-        },
-        alternateRowStyles: {
-            fillColor: [245, 245, 245]
+        // Filter information (if any filters are applied)
+        const dateFrom = document.getElementById('dateFrom')?.value;
+        const dateTo = document.getElementById('dateTo')?.value;
+        if (dateFrom && dateTo) {
+            doc.text(`Période : ${dateFrom} au ${dateTo}`, pageWidth / 2, 69, { align: 'center' });
         }
-    });
 
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(
-            `Page ${i} sur ${pageCount}`,
-            pageWidth / 2,
-            doc.internal.pageSize.height - 10,
-            { align: 'center' }
-        );
-    }
+        // Table data
+        const tableData = [];
+        $('#reportTable').DataTable().data().each(function (row) {
+            tableData.push([
+                row.pluri_id,
+                row.full_name,
+                row.department,
+                row.function,
+                row.days_present,
+                row.days_late,
+                row.days_absent,
+                row.days_vacation,
+                row.total_hours
+            ]);
+        });
 
-    // Save the PDF with formatted date in filename
-    const dateStr = new Date().toISOString().slice(0, 10);
-    doc.save(`Résumé_présences_employés_${dateStr}.pdf`);
-}</script>
+        // Enhanced table styling
+        doc.autoTable({
+            head: [['PluriId', 'Nom', 'Département', 'Fonction', 'Jours présent', 'Jours en retard', 'Jours absent', 'Jours congé', 'Heures totales']],
+            body: tableData,
+            startY: 70,
+            margin: { left: marginLeft, right: marginRight },
+            theme: 'grid',
+            styles: {
+                fontSize: 8,
+                cellPadding: 2,
+                overflow: 'linebreak'
+            },
+            headStyles: {
+                fillColor: [22, 160, 133],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            columnStyles: {
+                0: { cellWidth: 20 }, // PluriId
+                1: { cellWidth: 30 }, // Nom
+                2: { cellWidth: 25 }, // Département
+                3: { cellWidth: 25 }, // Fonction
+                4: { cellWidth: 15 }, // Jours présent
+                5: { cellWidth: 15 }, // Jours en retard
+                6: { cellWidth: 15 }, // Jours absent
+                7: { cellWidth: 15 }, // Jours congé
+                8: { cellWidth: 20 }  // Heures totales
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            }
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.text(
+                `Page ${i} sur ${pageCount}`,
+                pageWidth / 2,
+                doc.internal.pageSize.height - 10,
+                { align: 'center' }
+            );
+        }
+
+        // Save the PDF with formatted date in filename
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`Résumé_présences_employés_${dateStr}.pdf`);
+    }</script>
 <script>
     // Define the departments and their associated roles
     const departmentRoles = {
