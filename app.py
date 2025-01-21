@@ -361,7 +361,7 @@ def handle_attendance(employee):
         if not attendance.check_out:
             # Check out
             attendance.check_out = now
-            attendance.total_hours = (attendance.check_out - attendance.check_in).total_seconds() / 3600
+            attendance.total_hours = (attendance.check_out - make_aware(attendance.check_in)).total_seconds() / 3600
             db.session.commit()
             return {
                 'status': 'success',
@@ -390,7 +390,7 @@ def handle_attendance(employee):
             print('NO schedule')
             return {
             'status': 'error',
-            'message': f'Aucune plage horaire pour aujourd\'hui pour {employee.full_name}',
+            'message': f'No schedule found for the employee.',
         }
         return {
             'status': 'success',
