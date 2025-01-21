@@ -123,8 +123,8 @@
                                     <button class="flex items-center px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-150">
                                         <i class="fas fa-cog me-2"></i> Plus <i class="fas fa-chevron-down ml-2"></i>
                                     </button>
-                                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg hidden group-hover:block">
-                                        <div class="py-1">
+                                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
+                                        <div class="py-1" style="margin-top: -8px; padding-top: 8px;">
                                             <a href="{{ url_for('scan') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 {% if request.endpoint == 'scan' %}bg-blue-50 text-blue-600 font-medium{% endif %}">
                                                 <i class="fas fa-camera me-2"></i> Scanner
                                             </a>
